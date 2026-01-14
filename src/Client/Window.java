@@ -85,10 +85,13 @@ public class Window extends JFrame implements ActionListener {
                 this.revalidate();
                 this.repaint();
             } catch (Exception ex) {
-                System.out.println("Could not connect to server");
+                System.out.println("Could not connect to server: " + ex.getMessage());
             }
         } else if (Objects.equals(e.getActionCommand(), "Tabeltræning")) {
-            try (Socket socket = new Socket(ip, port); Scanner sockReceiver = new Scanner(socket.getInputStream()); PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true)) {
+            try {
+                Socket socket = new Socket(ip, port);
+                Scanner sockReceiver = new Scanner(socket.getInputStream());
+                PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true);
 
                 sockSender.println("Tabeltræning");
                 TabelKrig game = new TabelKrig(this, buttonText, socket, sockReceiver, sockSender);
@@ -97,10 +100,13 @@ public class Window extends JFrame implements ActionListener {
                 this.revalidate();
                 this.repaint();
             } catch (Exception ex) {
-                System.out.println("Could not connect to server");
+                System.out.println("Could not connect to server: " + ex.getMessage());
             }
         } else if (Objects.equals(e.getActionCommand(), "Faldende Regnestykker")) {
-            try (Socket socket = new Socket(ip, port); Scanner sockReceiver = new Scanner(socket.getInputStream()); PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true)) {
+            try {
+                Socket socket = new Socket(ip, port);
+                Scanner sockReceiver = new Scanner(socket.getInputStream());
+                PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true);
 
                 sockSender.println("Faldende Regnestykker");
                 FaldendeRegnestykker game = new FaldendeRegnestykker(this, buttonText, socket, sockReceiver, sockSender);
@@ -109,7 +115,7 @@ public class Window extends JFrame implements ActionListener {
                 this.revalidate();
                 this.repaint();
             } catch (Exception ex) {
-                System.out.println("Could not connect to server");
+                System.out.println("Could not connect to server: " + ex.getMessage());
             }
         }
     }

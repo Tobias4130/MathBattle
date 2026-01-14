@@ -11,7 +11,8 @@ public class Server {
             while (true) {
                 Socket connection = serverSocket.accept();
 
-                try (Scanner input = new Scanner(connection.getInputStream());) {
+                try  {
+                    Scanner input = new Scanner(connection.getInputStream());
                     String gameName = input.nextLine();
                     switch (gameName) {
                         case "Vendespil" -> {
