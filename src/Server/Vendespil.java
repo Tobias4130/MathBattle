@@ -7,14 +7,19 @@ import java.util.Objects;
 import java.util.Random;
 
 public class Vendespil extends Connection {
+    //Random generator
     Random random = new Random();
+    //Map der holder styr på matchende regnestykker
     HashMap<String, String> calculationsMap;
+    //Spilleboardet som har 16 kort
     String[] board = new String[16];
     String lastMove = "6767";
+    //Tæller antal træk, antal par fundet og tiden starter på 0
     int movesMade = 0;
     int pairsFound = 0;
     double startTime = 0;
 
+    //Forbindelse til klient
     public  Vendespil(Socket gameSocket){
         super(gameSocket);
         createHashMapAndBoard();
@@ -22,12 +27,14 @@ public class Vendespil extends Connection {
         System.out.println(calculationsMap);
     }
 
+    //Opretter spillebræt ud fra hashmap, hvor der genereres 8 regnestykker og hver regnestykke placeres tilfældigt.
     void createHashMapAndBoard(){
         calculationsMap = new HashMap<>();
         for (int i = 0; i < 8; i++) {
             int number1 = random.nextInt(1,11);
             int number2 = random.nextInt(1,11);
             int operator = random.nextInt(3);
+            //Regnestykkerne, først vælges +-* og efterfølgende tal
             String temp1 = switch (operator) {
                 case 0 -> (number1) + "+" + (number2);
                 case 1 -> (number1) + "-" + (number2);
@@ -55,14 +62,16 @@ public class Vendespil extends Connection {
             calculationsMap.put(temp1, temp2);
         }
     }
-
+    //Modtager kommandoer fra klienten, validerer træk og sender svar tilbage
     @Override
     public void run() {
         System.out.println("Vendespil er startet");
+        //Serveren informere klienten om den er klar til at starte
         writer.println("Ready to start");
         while (reader.hasNextLine()) {
             String data = reader.nextLine();
             System.out.println("Received data: " + data);
+            //Hvis start knap = spillet starter
             if (Objects.equals(data, "START")) {
                 startTime = System.nanoTime();
                 writer.println("Game has started");
@@ -70,6 +79,7 @@ public class Vendespil extends Connection {
             }
 
             String[] dataSplit = data.split(":");
+            //Klienten vælger kort
             if (dataSplit[0].equals("MOVE")) {
                 movesMade++;
                 int currentMoveInt = Integer.parseInt(dataSplit[1]);
@@ -78,21 +88,32 @@ public class Vendespil extends Connection {
                 if (Objects.equals(lastMove, "6767")) {
                     lastMove = currentMoveString;
                 }
+                //Tjekker om kortene matcher
                 else {
                     if (Objects.equals(calculationsMap.get(lastMove), currentMoveString)) {
                         writer.println("Correct");
                         pairsFound++;
                         if (pairsFound == 8) {
-                            double endTime = (System.nanoTime() - startTime) / 1_000_000_000.0;
+                            double endTime = (System.nanoTime() - startTime) / 1000000000.0;
+                            double roundedEndTime = Math.round(endTime * 100.0) / 100.0;
                             writer.println("Game has ended:" + endTime + " seconds");
+                            String username = reader.nextLine();
+                            System.out.println("Got username: " + username);
+                            double score = calculateScore(roundedEndTime,movesMade);
+                            new Leaderboard().addResult("Vendespil",username,score);
                             break;
                         }
                     } else if (Objects.equals(calculationsMap.get(currentMoveString), lastMove)) {
                         writer.println("Correct");
                         pairsFound++;
                         if (pairsFound == 8) {
-                            double endTime = System.nanoTime() - startTime;
-                            writer.println("Game has ended:" + endTime);
+                            double endTime = (System.nanoTime() - startTime) / 1000000000.0;
+                            double roundedEndTime = Math.round(endTime * 100.0) / 100.0;
+                            writer.println("Game has ended:" + roundedEndTime);
+                            String username = reader.nextLine();
+                            System.out.println("Got username: " + username);
+                            double score = calculateScore(roundedEndTime,movesMade);
+                            new Leaderboard().addResult("Vendespil",username,score);
                             break;
                         }
                     } else {
@@ -103,6 +124,7 @@ public class Vendespil extends Connection {
             }
         }
     }
+    //Beregner spillerens score i forhold til tid og antal træk.
     private double calculateScore(double timeSeconds, int movesMade) {
         double multiplier;
 

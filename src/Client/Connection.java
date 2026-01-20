@@ -13,11 +13,13 @@ public abstract class Connection extends JPanel implements ActionListener {
     Socket socket;
     Scanner reader;
     PrintWriter sender;
+    String username;
 
     public Connection(Window window, String title, Socket socket, Scanner reader, PrintWriter sender) {
         this.socket = socket;
         this.reader = reader;
         this.sender = sender;
+        this.username = window.username;
 
         setLayout(new BorderLayout());
 

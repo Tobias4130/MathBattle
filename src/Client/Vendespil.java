@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
+//Knapper, panel, lister, labels og tid
 public class Vendespil extends Connection {
     private JButton startBtn;
     private final JButton[] cardList = new JButton[16];
@@ -20,6 +21,7 @@ public class Vendespil extends Connection {
     int elapsedSeconds;
     Timer uiTimer;
 
+    //Forbindelse oprettes til server og konstruktør for vendespil
     public  Vendespil(Window window, String title, Socket socket, Scanner reader, PrintWriter sender) {
         super(window, title, socket, reader, sender);
         setupWindow();
@@ -40,7 +42,7 @@ public class Vendespil extends Connection {
         listener.start();
 
     }
-
+//Opsætter GUI for vendespil (spilleplade og informations panel)
     void setupWindow(){
         lagContainer = new JPanel();
         lagContainer.setLayout(new OverlayLayout(lagContainer));
@@ -65,7 +67,7 @@ public class Vendespil extends Connection {
 
         JPanel boardPanel = new JPanel(new GridLayout(4, 4, 10, 10));
         boardPanel.setBorder (BorderFactory.createEmptyBorder(5,5,5,5));
-        boardPanel.setBackground(new Color(5, 203, 252));
+        boardPanel.setBackground(new Color(186, 85, 211));
 
         for (int i = 0; i < 16; i++) {
             JButton card = new JButton("");
@@ -79,7 +81,7 @@ public class Vendespil extends Connection {
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         infoPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 40, 0));
         infoPanel.setPreferredSize(new Dimension(100,50));
-        infoPanel.setBackground(new Color(5, 203, 252));
+        infoPanel.setBackground(new Color(186, 85, 211));
 
         Font infoFont = new Font ("Arial",Font.BOLD,20);
         timeLabel = new JLabel("Tid: 0");
@@ -94,13 +96,13 @@ public class Vendespil extends Connection {
         spilContainer.add(infoPanel, BorderLayout.PAGE_END);
         add(lagContainer,BorderLayout.CENTER);
     }
-
+//Behandler beskeder fra server og opdatere spillebrættet efter serverens beskeder.
     void handleServerMessages(String line){
         System.out.println(line);
         if (Objects.equals(line, "Game has started")) {
-            //Start Timer
-        } else if (Objects.equals(line, "Game has ended")) {
 
+        } else if (Objects.equals(line, "Game has ended")) {
+            JOptionPane.showMessageDialog(null, "Game has ended\nYour score is ");
         } else if (Objects.equals(line.split(":")[0], "Move received")) {
             openCards.getLast().setText(line.split(":")[1]);
             openCards.getLast().setEnabled(false);
@@ -120,9 +122,12 @@ public class Vendespil extends Connection {
                     openCards.removeFirst();
                 }
             }
+        } else if (line.startsWith("Game has ended")){
+            uiTimer.stop();
+            sender.println(username);
         }
     }
-
+//Håndterer brugerens handlinger i spillet
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource()==startBtn) {
@@ -132,6 +137,7 @@ public class Vendespil extends Connection {
             for (JButton card : cardList) {
                 card.setEnabled(true);
             }
+            sender.println("START");
             startLocalTimer();
 
         } else {
@@ -143,6 +149,7 @@ public class Vendespil extends Connection {
             }
         }
     }
+    //Lokal tidstagning som kan ses på GUI
     private void startLocalTimer () {
         elapsedSeconds = 0;
         timeLabel.setText("Tid: 0");

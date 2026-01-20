@@ -3,23 +3,25 @@ package Client;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
-//TODO Lav det så man kan sende svar med Enter
-public class simpleRegnestyk extends Connection {
-    private JLabel titleLabel;
-    private JPanel statusPanel;
+
+public class simpleRegnestyk extends Connection implements KeyListener {
+    private JLabel titleLabel; //Overskrift på spil
+    private JPanel statusPanel; //Panel 10 status bokse
     private JPanel exercisePanel;
     private JLabel[] statusBox = new JLabel[10];
-    private JLabel questionLabel;
-    private JTextField textField;
-    private JButton startBtn;
-    private JButton enterBtn;
-    private JLabel timeLabel;
-    private int currentIndex = 0;
-    private Timer uiTimer;
-    private int elapsedSeconds = 0;
+    private JLabel questionLabel; //aktuel regnestykke
+    private JTextField textField; //inputfelt til svar
+    private JButton startBtn; //startknap
+    private JButton enterBtn; //enterknap
+    private JLabel timeLabel; //Lokal tid
+    private int currentIndex = 0; //Spørgsmål nr
+    private Timer uiTimer; //Tid
+    private int elapsedSeconds = 0; //Sekunder
 
     private final Scanner reader;
     private final PrintWriter sender;
@@ -31,11 +33,11 @@ public class simpleRegnestyk extends Connection {
         setupWindow();
 
 
-
+    //Opsætter GUI, titel, status 10 bokse, opgave, tekstfel, start/enter, tid
     }
     void setupWindow(){
         exercisePanel = new JPanel();
-        exercisePanel.setBackground(new Color(5, 203, 252));
+        exercisePanel.setBackground(new Color(200, 200, 200));
         exercisePanel.setLayout(new BoxLayout(exercisePanel, BoxLayout.PAGE_AXIS));
         exercisePanel.setBorder(BorderFactory.createEmptyBorder(40, 80, 40, 80));
 
@@ -44,7 +46,7 @@ public class simpleRegnestyk extends Connection {
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         statusPanel = new JPanel(new GridLayout(1, 10, 10, 10));
-        statusPanel.setBackground(new Color(5, 203, 252));
+        statusPanel.setBackground(new Color(200, 200, 200));
         statusPanel.setMaximumSize(new Dimension(900, 60));
         statusPanel.setPreferredSize(new Dimension(900, 60));
         statusPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -69,6 +71,7 @@ public class simpleRegnestyk extends Connection {
         textField.setFont(new Font("Arial", Font.BOLD, 28));
         textField.setHorizontalAlignment(JTextField.CENTER);
         textField.setEnabled(false);
+        textField.addKeyListener(this);
 
         startBtn = new JButton("Start");
         startBtn.setFont(new Font("Arial", Font.BOLD, 24));
@@ -105,17 +108,20 @@ public class simpleRegnestyk extends Connection {
 
         add(exercisePanel, BorderLayout.CENTER);
     }
+    //Når der klikkes på knapperne
         @Override
     public void actionPerformed(ActionEvent e) {
+        //Start knap, starter
             if (e.getSource() == startBtn) {
                 resetStatusBoxes();
                 startLocalTimer();
+                exercisePanel.remove(startBtn);
 
                 sender.println("START");
                 enterBtn.setEnabled(true);
                 textField.setEnabled(true);
                 textField.requestFocusInWindow();
-
+            //Tråd lytter efter server beskeder og opdatere GUI
                 Thread listener = new Thread(() -> {
                     try {
                         while (reader.hasNextLine()) {
@@ -135,19 +141,26 @@ public class simpleRegnestyk extends Connection {
                 sendAnswer();
             }
         }
+        //Sender svar til server og validere input er tal
     private void sendAnswer () {
         String txt = textField.getText().trim();
+        //hvis input ikke et tal, ryddes tekstfelt
         if (!txt.matches("-?\\d+")) {
             System.out.println("Please enter a valid number");
             textField.setText("");
+            textField.requestFocusInWindow();
             return;
         }
+        //Sender svar til server og gør klar til næste
         sender.println("ANSWER:" + txt);
         System.out.println("ANSWER:" + txt);
         textField.setText("");
+        textField.requestFocusInWindow();
     }
+    //Modtager og håndtere server beskeder
     private void handleServerMessage(String msg) {
         System.out.println("Server Message: " + msg);
+        //Nyt spørgsmål
         if (msg.startsWith("Q:")) {
             String[] parts = msg.split(":");
             int nr = Integer.parseInt(parts[1]); // 1..10
@@ -158,6 +171,7 @@ public class simpleRegnestyk extends Connection {
             statusBox[currentIndex].setBackground(new Color(31, 173, 255));
             return;
         }
+        //korrekt svar
         if (msg.startsWith("OK:")) {
             int nr = Integer.parseInt(msg.split(":")[1]);
             int idx = nr - 1;
@@ -166,6 +180,7 @@ public class simpleRegnestyk extends Connection {
             statusBox[idx].setText("✓");
             return;
         }
+        //forkert svar
         if (msg.startsWith("WRONG:")) {
             int nr = Integer.parseInt(msg.split(":")[1]);
             int idx = nr - 1;
@@ -176,6 +191,7 @@ public class simpleRegnestyk extends Connection {
             JOptionPane.showMessageDialog(this, "Forkert – prøv igen!");
             return;
         }
+        //Afslutnign
         if (msg.startsWith("DONE:")) {
             String time = msg.split(":")[1];
 
@@ -183,10 +199,11 @@ public class simpleRegnestyk extends Connection {
             timeLabel.setText("Tid: " + time + " sekunder");
             enterBtn.setEnabled(false);
             textField.setEnabled(false);
-
+            sender.println(username);
             JOptionPane.showMessageDialog(this, "Tillykke du er færdig!\nDin tid: " + time + " sekunder");
         }
     }
+    //Nulsiller status bokse til starttilstand
     private void resetStatusBoxes() {
         for (int i = 0; i < statusBox.length; i++) {
             statusBox[i].setText("·");
@@ -196,6 +213,7 @@ public class simpleRegnestyk extends Connection {
         questionLabel.setText("Tryk Start");
     }
 
+    //Lokal tid
     private void startLocalTimer() {
         elapsedSeconds = 0;
         timeLabel.setText("Tid: 0");
@@ -207,5 +225,22 @@ public class simpleRegnestyk extends Connection {
             timeLabel.setText("Tid: " + elapsedSeconds);
         });
         uiTimer.start();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            sendAnswer();
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }

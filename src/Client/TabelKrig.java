@@ -27,6 +27,7 @@ public class TabelKrig extends Connection implements KeyListener {
     private JLabel[] statusBox = new JLabel[10];
     private int statusIndex = 0;
 
+    //Forbindelse til server
     public  TabelKrig(Window window, String title, Socket socket, Scanner reader, PrintWriter sender){
         super(window, title,  socket, reader, sender);
         this.sender = sender;
@@ -35,7 +36,7 @@ public class TabelKrig extends Connection implements KeyListener {
 
         setupWindow();
     }
-
+//Opsætter første vindue hvor der vælges en tabel fra 2-10, når knap valgt skiftes vindue til valgte tabel
     void setupWindow(){
         boardPanel = new JPanel (new GridLayout(3,3,10,10));
         boardPanel.setBorder (BorderFactory.createEmptyBorder(5,5,5,5));
@@ -56,6 +57,7 @@ public class TabelKrig extends Connection implements KeyListener {
         add(boardPanel, BorderLayout.CENTER);
 
     }
+    //Opsætter GUI for den valgte tabel, med start, enter, tid og statusbokse
     void exercisePanel (String tabel) {
         exercisePanel = new JPanel();
         exercisePanel.setBackground(new Color(5, 203, 252));
@@ -64,7 +66,7 @@ public class TabelKrig extends Connection implements KeyListener {
 
         JLabel titlePanel = new JLabel(tabel + " tabellen");
         titlePanel.setFont(new Font("Arial", Font.BOLD, 42));
-
+//Statuspanel med 10 bokse
         statusPanel= new JPanel(new GridLayout(1,10,10,10));
         statusPanel.setBackground(new Color(5, 203, 252));
         statusPanel.setMaximumSize(new Dimension(900, 60));
@@ -83,7 +85,7 @@ public class TabelKrig extends Connection implements KeyListener {
             statusPanel.add(box);
         }
         statusIndex = 0;
-
+//inputfelt til svar
         textField = new JTextField(JTextField.CENTER);
         Dimension size = new Dimension(320,50);
         textField.setPreferredSize(size);
@@ -91,12 +93,12 @@ public class TabelKrig extends Connection implements KeyListener {
         textField.setFont(new Font("Arial", Font.BOLD, 28));
         textField.addKeyListener(this);
         textField.setEnabled(false);
-
+//Svaret sendes
         enterBtn = new JButton("Enter");
         enterBtn.setFont(new Font("Arial", Font.BOLD, 24));
         enterBtn.addActionListener(this);
         enterBtn.setEnabled(false);
-
+//Starter spil og tid starter
         startBtn = new JButton("Start");
         startBtn.setFont(new Font("Arial", Font.BOLD, 24));
         startBtn.addActionListener(this);
@@ -104,7 +106,7 @@ public class TabelKrig extends Connection implements KeyListener {
         Dimension btnSize = new Dimension(320, 55);
         startBtn.setPreferredSize(btnSize);
         enterBtn.setPreferredSize(btnSize);
-
+//Tid
         timeLabel = new JLabel("Tid: 0");
         timeLabel.setFont(new Font("Arial", Font.BOLD, 24));
         timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -117,7 +119,7 @@ public class TabelKrig extends Connection implements KeyListener {
         enterBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-
+//Layout så der er luft mellem elementerne
         exercisePanel.add(Box.createVerticalGlue());
 
         exercisePanel.add(titlePanel);
@@ -141,7 +143,7 @@ public class TabelKrig extends Connection implements KeyListener {
         revalidate();
         repaint();
     }
-
+//Håndtere klik på knapperne
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getActionCommand().split(" ")[0].matches("[2-9]|10")){
@@ -164,7 +166,7 @@ public class TabelKrig extends Connection implements KeyListener {
             EnterFunc();
         }
     }
-
+//Starter lokal tid
     private void startLocalTimer () {
         elapsedSeconds = 0;
         timeLabel.setText("Tid: 0");
@@ -196,7 +198,7 @@ public class TabelKrig extends Connection implements KeyListener {
     public void keyReleased(KeyEvent e) {
 
     }
-
+//Validere at det er et tal fra spilleren, sender til server, modtager respons, opdatere statusboks og tid stoppes
     private void EnterFunc() {
         String txt = textField.getText().trim();
         if (!txt.matches("-?\\d+")) {
@@ -222,6 +224,7 @@ public class TabelKrig extends Connection implements KeyListener {
                     }
                     timeLabel.setText("Tid:"+ data + "sekunder");
                     uiTimer.stop();
+                    sender.println(username);
                     JOptionPane.showMessageDialog(this, "Tillykke du er færdig!\n Din tid:" + data + "sekunder");
                 }
             }

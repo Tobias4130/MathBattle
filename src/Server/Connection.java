@@ -23,4 +23,8 @@ public abstract class Connection implements Runnable {
             System.out.println("Connection failed to " + socket.getInetAddress() + ":" + socket.getPort());
         }
     }
+
+    public Connection() {
+
+    }
 }

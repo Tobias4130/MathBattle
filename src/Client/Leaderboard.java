@@ -13,6 +13,7 @@ public class Leaderboard extends Connection {
     private final JButton btnVend = new JButton("Vendespil");
     private final JButton btnTabel = new JButton("TabelKrig");
     private final JButton btnRegn = new JButton("Regnestykker");
+    private final JButton btnMonkey = new JButton("MonkeyRace");
 
     private final JLabel titleLabel = new JLabel("Leaderboard", SwingConstants.CENTER);
     private final JPanel scoresContainer;
@@ -32,7 +33,7 @@ public class Leaderboard extends Connection {
         btnBack.addActionListener(_ -> {window.getContentPane().remove(this);window.MainMenuSetup();this.revalidate();this.repaint();});
 
         setLayout(new BorderLayout(10, 10));
-        setBackground(new Color(5, 203, 252));
+        setBackground(new Color(255,215,0));
         setBorder(BorderFactory.createEmptyBorder(30, 60, 30, 60));
 
         JPanel top = new JPanel();
@@ -42,15 +43,15 @@ public class Leaderboard extends Connection {
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         btnTotal.setFont(new Font("Arial", Font.BOLD, 26));
-        btnTotal.setPreferredSize(new Dimension(600, 60));
-        btnTotal.setMaximumSize(new Dimension(600, 60));
+        btnTotal.setPreferredSize(new Dimension(800, 60));
+        btnTotal.setMaximumSize(new Dimension(800, 60));
         btnTotal.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnTotal.setFocusPainted(false);
         btnTotal.addActionListener(this);
 
         JPanel gameButtons = new JPanel(new GridLayout(1, 3, 15, 0));
         gameButtons.setOpaque(false);
-        gameButtons.setMaximumSize(new Dimension(600, 60));
+        gameButtons.setMaximumSize(new Dimension(800, 60));
         gameButtons.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         Font smallBtnFont = new Font("Arial", Font.BOLD, 22);
@@ -58,19 +59,23 @@ public class Leaderboard extends Connection {
         btnVend.setFont(smallBtnFont);
         btnTabel.setFont(smallBtnFont);
         btnRegn.setFont(smallBtnFont);
+        btnMonkey.setFont(smallBtnFont);
 
         btnVend.setFocusPainted(false);
         btnTabel.setFocusPainted(false);
         btnRegn.setFocusPainted(false);
+        btnMonkey.setFocusPainted(false);
 
         btnVend.addActionListener(this);
         btnTabel.addActionListener(this);
         btnRegn.addActionListener(this);
+        btnMonkey.addActionListener(this);
 
 
         gameButtons.add(btnVend);
         gameButtons.add(btnTabel);
         gameButtons.add(btnRegn);
+        gameButtons.add(btnMonkey);
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
@@ -84,6 +89,7 @@ public class Leaderboard extends Connection {
         top.add(btnTotal);
         top.add(Box.createVerticalStrut(15));
         top.add(gameButtons);
+        top.add(Box.createVerticalStrut(20));
 
         add(top, BorderLayout.PAGE_START);
 
@@ -92,7 +98,6 @@ public class Leaderboard extends Connection {
         scoresContainer.setOpaque(false);
         scoresContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         scoresContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
-
 
         Thread listener = new Thread(() -> {
             try {
@@ -115,21 +120,28 @@ public class Leaderboard extends Connection {
         if (e.getSource() == btnVend){
             sender.println("Vendespil");
         } else if (e.getSource() == btnTabel) {
-            sender.println("TableKrig");
+            sender.println("TabelKrig");
         } else if (e.getSource() == btnRegn) {
             sender.println("simpleRegnestyk");
         } else if (e.getSource() == btnTotal) {
             sender.println("Total");
+        } else if (e.getSource() == btnMonkey) {
+            sender.println("MonkeyRace");
         }
     }
 
     void handleServerMessages(String line){
         scoresContainer.removeAll();
         String[] splitLine = line.split(";");
-        for (String s : splitLine) {
-            JLabel tempScore = new JLabel(s);
-            tempScore.setAlignmentX(Component.LEFT_ALIGNMENT);
-            tempScore.setFont(new Font("Arial", Font.PLAIN, 18));
+        for (int i = 0 ; i < splitLine.length; i++) {
+            if (!splitLine[i].contains(",")){
+                continue;
+            }
+            String user = splitLine[i].split(",")[0];
+            String score = splitLine[i].split(",")[1];
+            JLabel tempScore = new JLabel("Top "+i+" - "+user+": "+score);
+            tempScore.setAlignmentX(Component.CENTER_ALIGNMENT);
+            tempScore.setFont(new Font("Arial", Font.PLAIN, 24));
             scoresContainer.add(tempScore);
             scoresContainer.add(Box.createVerticalStrut(5));
         }

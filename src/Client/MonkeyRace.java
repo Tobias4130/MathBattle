@@ -2,36 +2,42 @@ package Client;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicArrowButton;
 import java.util.Random;
 
-
-public class MonkeyRace extends Connection {
+//Skal løse regnestykker og aben hopper en palme frem og aben skal nå bananerne
+public class MonkeyRace extends Connection implements KeyListener {
 
     private boolean animating = false;
     private Timer hopTimer;
 
+    private JPanel top;
     private JButton startBtn;
     private JLabel tidLabel;
 
     private JPanel trackPanel;
     private JLabel abeLabel;
     private JLabel finishLabel;
+    private JPanel gameContainerPanel;
 
     private JLabel questionLabel;
     private JTextField answerField;
     private JButton enterBtn;
-
-    private final Random random = new Random();
-    private int a, b;
-    private char op;
-    private int expected;
+    private JPanel inputRow;
 
     private int position = 0;
-    private final int goal = 8;
+    private final int goal = 9;
+    private final int startX = 60;
+    private int w;
+    private int h;
+    private int y;
+    private int finishX;
 
     private Timer uiTimer;
     private int elapsedSeconds = 0;
@@ -41,14 +47,15 @@ public class MonkeyRace extends Connection {
 
     public MonkeyRace(Window window, String title, Socket socket, Scanner reader, PrintWriter sender) {
         super(window, title, socket, reader, sender);
-        setUpWindow();
+        setUpWindow(window);
     }
+    //Opsætter GUI
+    private void setUpWindow(Window window) {
 
-    private void setUpWindow() {
-        setBackground(new Color(50, 205, 50));
-        setLayout(new BorderLayout(10, 10));
+        gameContainerPanel = new JPanel(new BorderLayout());
+        gameContainerPanel.setBackground(new Color(50, 205, 50));
 
-        JPanel top = new JPanel(new BorderLayout());
+        top = new JPanel(new BorderLayout());
         top.setOpaque(false);
         top.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -60,19 +67,18 @@ public class MonkeyRace extends Connection {
         tidLabel = new JLabel("Tid: 0", SwingConstants.RIGHT);
         tidLabel.setFont(new Font("Arial", Font.BOLD, 22));
 
-        top.add(startBtn, BorderLayout.LINE_START);
         top.add(tidLabel, BorderLayout.LINE_END);
-        add(top, BorderLayout.PAGE_START);
+        gameContainerPanel.add(top, BorderLayout.PAGE_START);
 
         trackPanel = new JPanel(null);
         trackPanel.setOpaque(false);
         trackPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
-
+        //Abe billede
         ImageIcon icon = new ImageIcon("src/Client/Images/monkey.png");
         Image img = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
         abeLabel = new JLabel(new ImageIcon(img));
         abeLabel.setSize(80, 80);
-
+        //Banan billede (præmie)
         ImageIcon iconFinish = new ImageIcon(("src/Client/Images/banana.png"));
         Image imgFinish = iconFinish.getImage().getScaledInstance(80,80, Image.SCALE_SMOOTH);
         finishLabel = new JLabel(new ImageIcon(imgFinish));
@@ -81,7 +87,7 @@ public class MonkeyRace extends Connection {
 
         trackPanel.add(abeLabel);
         trackPanel.add(finishLabel);
-
+        //Palmetræ
         ImageIcon palmIcon = new ImageIcon("src/Client/Images/palm-tree.png");
         Image palmImg = palmIcon.getImage().getScaledInstance(120, 160, Image.SCALE_SMOOTH);
         ImageIcon scaledPalm = new ImageIcon(palmImg);
@@ -93,7 +99,7 @@ public class MonkeyRace extends Connection {
             trackPanel.add(tree);
         }
 
-        add(trackPanel, BorderLayout.CENTER);
+        gameContainerPanel.add(trackPanel, BorderLayout.CENTER);
 
         JPanel bottom = new JPanel();
         bottom.setOpaque(false);
@@ -104,7 +110,7 @@ public class MonkeyRace extends Connection {
         questionLabel.setFont(new Font("Arial", Font.BOLD, 28));
         questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel inputRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        inputRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         inputRow.setOpaque(false);
 
         answerField = new JTextField();
@@ -112,6 +118,7 @@ public class MonkeyRace extends Connection {
         answerField.setFont(new Font("Arial", Font.BOLD, 24));
         answerField.setHorizontalAlignment(JTextField.CENTER);
         answerField.setEnabled(false);
+        answerField.addKeyListener(this);
 
         enterBtn = new JButton("Enter");
         enterBtn.setFont(new Font("Arial", Font.BOLD, 22));
@@ -121,22 +128,35 @@ public class MonkeyRace extends Connection {
 
         inputRow.add(answerField);
         inputRow.add(enterBtn);
+        inputRow.add(startBtn);
 
         bottom.add(questionLabel);
         bottom.add(inputRow);
 
-        add(bottom, BorderLayout.PAGE_END);
+        gameContainerPanel.add(bottom, BorderLayout.PAGE_END);
+        add(gameContainerPanel, BorderLayout.CENTER);
+        //Tråd lytter på beskeder fra server
+        Thread listener = new Thread(() -> {
+            try {
+                while (reader.hasNextLine()) {
+                    String line = reader.nextLine();
 
-        SwingUtilities.invokeLater(this::layoutTrack);
+                    SwingUtilities.invokeLater(() -> handleServerMessages(line));
+                }
+            } catch (Exception _) {
+
+            }
+        });
+        listener.start();
+
+        SwingUtilities.invokeLater(this::layOutTrack);
     }
-
-    private void layoutTrack() {
-        int w = trackPanel.getWidth();
-        int h = trackPanel.getHeight();
-        int y = Math.max(60, h / 2 - 50);
-
-        int startX = 60;
-        int finishX = Math.max(startX + 300, w - 140);
+    //Beregner og placering af træer, start og mål
+    private void layOutTrack() {
+        w = trackPanel.getWidth();
+        h = trackPanel.getHeight();
+        y = Math.max(60, h / 2 - 50);
+        finishX = Math.max(startX + 300, w - 140);
 
         finishLabel.setLocation(finishX, y);
         int usable = finishX - startX;
@@ -148,25 +168,29 @@ public class MonkeyRace extends Connection {
             treePoints[i] = new Point(tx, ty);
             treeLabels[i].setLocation(tx, ty);
         }
-        updateMonkeyPosition(startX, finishX, y);
+        updateMonkeyPosition();
     }
-
-    private void updateMonkeyPosition(int startX, int finishX, int y) {
+    //Abens position på banen
+    private void updateMonkeyPosition() {
         int yOffset = -50; // så aben står lidt over træet
 
         if (position == 0) {
             abeLabel.setLocation(startX, y);
         } else if (position >= goal) {
-            abeLabel.setLocation(finishX, y);
+            animateHopTo(finishX, y+yOffset);
         } else {
             Point p = treePoints[position - 1];
-            abeLabel.setLocation(p.x, p.y + yOffset);
+            animateHopTo(p.x, p.y+yOffset);
         }
         trackPanel.revalidate();
         trackPanel.repaint();
     }
-
+    //Starter spillet og tid
     private void startGame() {
+        inputRow.remove(startBtn);
+        revalidate();
+        repaint();
+
         tidLabel.setText("Tid: 0");
 
         if (uiTimer != null && uiTimer.isRunning()) uiTimer.stop();
@@ -178,97 +202,40 @@ public class MonkeyRace extends Connection {
 
         answerField.setEnabled(true);
         enterBtn.setEnabled(true);
+        startBtn.setEnabled(false);
         answerField.setText("");
         answerField.requestFocusInWindow();
 
         moveCorrect();
-        nextQuestion();
-        layoutTrack();
+        layOutTrack();
+        sender.println("Start");
     }
+    //Stopper spil og viser din slut tid for at gennemføre banen
     private void stopGame() {
         if (uiTimer != null) uiTimer.stop();
         answerField.setEnabled(false);
         enterBtn.setEnabled(false);
 
-        JOptionPane.showMessageDialog(this,
-                "Tillykke! Aben nåede målstregen.\nTid: " + elapsedSeconds + " sekunder");
+        JOptionPane.showMessageDialog(this, "Tid: "+elapsedSeconds+" sekunder");
     }
-
-    private void nextQuestion() {
-        a = random.nextInt(91) + 10;
-        b = random.nextInt(91) + 10;
-
-        if (random.nextBoolean()) {
-            op = '+';
-            expected = a + b;
-        } else {
-            op = '-';
-            expected = a - b;
-        }
-        questionLabel.setText(a + " " + op + " " + b + " = ?");
-    }
-
-    private void checkAnswer() {
-
-        String txt = answerField.getText().trim();
-        answerField.setText("");
-
-        if (!txt.matches("-?\\d+")) {
-            moveWrong();
-            return;
-        }
-
-        int guess = Integer.parseInt(txt);
-        if (guess == expected) {
-            moveCorrect();
-        } else {
-            moveWrong();
-        }
-    }
-
+    //Aben hopper et palmetræ frem ved rigtig svar
     private void moveCorrect() {
         position = Math.min(goal, position + 1);
 
-        int w = trackPanel.getWidth();
-        int h = trackPanel.getHeight();
-        int y = Math.max(60, h / 2 - 50);
-        int startX = 60;
-        int finishX = Math.max(startX + 300, w - 140);
-
-        updateMonkeyPosition(startX, finishX, y);
-
-        if (position >= goal) {
-            stopGame();
-        } else {
-            nextQuestion();
-        }
+        updateMonkeyPosition();
     }
-
+    //Aben hopper et palmetræ tilbage ved forkert svar
     private void moveWrong() {
-        position = Math.max(0, position - 1);
+        position = Math.max(1, position - 1);
 
-        int w = trackPanel.getWidth();
-        int h = trackPanel.getHeight();
-        int y = Math.max(60, h / 2 - 50);
-        int startX = 60;
-        int finishX = Math.max(startX + 300, w - 140);
-
-        updateMonkeyPosition(startX, finishX, y);
-
-        JOptionPane.showMessageDialog(this, "Forkert – aben hopper tilbage!");
+        updateMonkeyPosition();
     }
-
+    //Animerer abens hop
     private void animateHopTo(int targetX, int baseY) {
-        if (animating) return;
-        animating = true;
-
         int startX = abeLabel.getX();
-        int startY = abeLabel.getY();
-
         int frames = 18;
         int durationMs = 280;
         int delay = durationMs / frames;
-
         int maxJumpHeight = 55;
 
         if (hopTimer != null && hopTimer.isRunning()) hopTimer.stop();
@@ -277,11 +244,8 @@ public class MonkeyRace extends Connection {
 
         hopTimer = new Timer(delay, ev -> {
             f[0]++;
-
             double t = f[0] / (double) frames;
-
             int x = (int) (startX + (targetX - startX) * t);
-
             int y = (int) (baseY - Math.sin(Math.PI * t) * maxJumpHeight);
 
             abeLabel.setLocation(x, y);
@@ -294,14 +258,36 @@ public class MonkeyRace extends Connection {
                 trackPanel.revalidate();
                 trackPanel.repaint();
                 animating = false;
-
-                if (position >= goal) {
-                    stopGame();
-                }
             }
         });
-
         hopTimer.start();
+    }
+    //Håndtere beskeder fra serveren
+    private void handleServerMessages(String line) {
+        System.out.println(line);
+        if (line.length() > 1) {
+            String[] lineSplit = line.split(":");
+            String action = lineSplit[0];
+            String information = lineSplit[1];
+            if (action.equals("Q")) {
+                questionLabel.setText(information);
+            }
+        } else if (line.equals("C")) {
+            moveCorrect();
+        } else if (line.equals("I")) {
+            moveWrong();
+        } else if (line.equals("W")) {
+            sender.println(username);
+            moveCorrect();
+            stopGame();
+        }
+    }
+    //Sender spillerens svar til server
+    private void sendAnswer() {
+        String input = answerField.getText();
+        sender.println("A:"+input);
+        answerField.setText("");
+        answerField.requestFocusInWindow();
     }
 
     @Override
@@ -311,7 +297,19 @@ public class MonkeyRace extends Connection {
             return;
         }
         if (e.getSource() == enterBtn) {
-            checkAnswer();
+            sendAnswer();
         }
     }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            sendAnswer();
+        }
+    }
+    @Override
+    public void keyReleased(KeyEvent e) {}
 }

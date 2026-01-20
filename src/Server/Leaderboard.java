@@ -13,6 +13,7 @@ public class Leaderboard extends Connection{
     File tabelKrigData;
     File simpleRegnData;
     File selectedFile;
+    File monkeyRaceData;
 
     public Leaderboard(Socket connection){
         super(connection);
@@ -28,6 +29,35 @@ public class Leaderboard extends Connection{
         }
         try {
             simpleRegnData = new File("src/Server/Database/simpleRegn.csv");
+        } catch (Exception e) {
+            System.out.println("Could not find file simpleRegn.csv");
+        }
+        try {
+            monkeyRaceData = new File("src/Server/Database/monkeyRace.csv");
+        } catch (Exception e) {
+            System.out.println("Could not find file simpleRegn.csv");
+        }
+    }
+
+    public Leaderboard(){
+        super();
+        try {
+            vendespilData = new File("src/Server/Database/Vendespil.csv");
+        } catch (Exception e) {
+            System.out.println("Could not find file Vendespil.csv");
+        }
+        try {
+            tabelKrigData = new File("src/Server/Database/TabelKrig.csv");
+        } catch (Exception e) {
+            System.out.println("Could not find file TabelKrig.csv");
+        }
+        try {
+            simpleRegnData = new File("src/Server/Database/simpleRegn.csv");
+        } catch (Exception e) {
+            System.out.println("Could not find file simpleRegn.csv");
+        }
+        try {
+            monkeyRaceData = new File("src/Server/Database/monkeyRace.csv");
         } catch (Exception e) {
             System.out.println("Could not find file simpleRegn.csv");
         }
@@ -51,7 +81,7 @@ public class Leaderboard extends Connection{
             }
         }
 
-        map.merge(user, score, Math::max);
+        map.merge(user, score, Math::min);
 
         map = sortMap(map);
 
@@ -78,11 +108,57 @@ public class Leaderboard extends Connection{
             case "simpleRegnestyk":
                 selectedFile = simpleRegnData;
                 break;
+
+            case "MonkeyRace":
+                selectedFile = monkeyRaceData;
+                break;
         }
     }
 
+    private HashMap<String, Double> loadDataToMap(Scanner dataReader){
+        HashMap<String, Double> map = new HashMap<>();
+
+        while (dataReader.hasNextLine()) {
+            String line = dataReader.nextLine();
+            String[] lineArray = line.split(",");
+            String tempUser = lineArray[0];
+            String tempScore = lineArray[1];
+            map.put(tempUser, Double.valueOf(tempScore));
+        }
+        return map;
+    }
+
     public String getGlobalTop10Leaderboard(){
-        return "";
+        StringBuilder stringBuilder = new StringBuilder();
+        HashMap<String, Double> totalScores = new HashMap<>();
+
+        try (Scanner vendeReader = new Scanner(vendespilData); Scanner tabelReader = new Scanner(tabelKrigData);Scanner regnReader = new Scanner(simpleRegnData);Scanner monkeyReader = new Scanner(monkeyRaceData);) {
+
+            HashMap<String, Double> vendespilScores = loadDataToMap(vendeReader);
+            HashMap<String, Double> tabelKrigScores = loadDataToMap(tabelReader);
+            HashMap<String, Double> regnstykScores = loadDataToMap(regnReader);
+            HashMap<String, Double> monkeyScores = loadDataToMap(monkeyReader);
+
+            for (String key : vendespilScores.keySet()) {
+                Double score1 = vendespilScores.get(key);
+                Double score2 = tabelKrigScores.get(key);
+                Double score3 = regnstykScores.get(key);
+                Double score4 = monkeyScores.get(key);
+                System.out.println(key + " " + score1 + " " + score2 + " " + score3 + " " + score4);
+
+                if (score1 != null && score2 != null && score3 != null && score4 != null) {
+                    double roundScore = (double) Math.round((score1 + score2 + score3 + score4) * 100) / 100;
+                    totalScores.put(key, roundScore);
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("Now we cry"+ex.getMessage());
+        }
+        totalScores = sortMap(totalScores);
+        for (String key : totalScores.keySet()) {
+            stringBuilder.append(";").append(key).append(",").append(totalScores.get(key));
+        }
+        return stringBuilder.toString();
     }
 
     public String getSpecificTop10Leaderboard(String gameName){
@@ -115,13 +191,11 @@ public class Leaderboard extends Connection{
 
     @Override
     public void run() {
-        System.out.println("Thread Started");
         while(reader.hasNextLine()) {
-            System.out.println("We got here");
             String line = reader.nextLine();
             System.out.println(line);
             String gameName = line.split(":")[0];
-            if (Objects.equals(gameName, "Vendespil") || Objects.equals(gameName, "TabelKrig")  || Objects.equals(gameName, "simpleRegnestyk")) {
+            if (Objects.equals(gameName, "Vendespil") || Objects.equals(gameName, "TabelKrig")  || Objects.equals(gameName, "simpleRegnestyk") || Objects.equals(gameName, "MonkeyRace")) {
                 writer.println(gameName + getSpecificTop10Leaderboard(gameName));
             } else if (Objects.equals(gameName, "Total")) {
                 writer.println("Total"+getGlobalTop10Leaderboard());

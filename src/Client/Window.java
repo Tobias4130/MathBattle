@@ -18,7 +18,7 @@ public class Window extends JFrame implements ActionListener {
     JPanel usernameContainer;
     JButton submitButton;
     JTextField usernameField;
-    String username;
+    public String username;
 
     public Window() {
         this.setTitle("MathBattle");
@@ -49,14 +49,19 @@ public class Window extends JFrame implements ActionListener {
         JButton btnTab = new JButton("Tabeltræning");
         JButton btnRegn = new JButton("Regnestykker");
         JButton btnMonkey =  new JButton("Monkey Race");
+        JButton btnLeaderBoard = new JButton ("Leaderboard");
         btnVend.addActionListener(this);
         btnTab.addActionListener(this);
         btnRegn.addActionListener(this);
         btnMonkey.addActionListener(this);
+        btnLeaderBoard.addActionListener(this);
+
         btnVend.setFont(gameButtonFont);
         btnTab.setFont(gameButtonFont);
         btnRegn.setFont(gameButtonFont);
         btnMonkey.setFont(gameButtonFont);
+        btnLeaderBoard.setFont((new  Font("Arial",Font.BOLD,24)));
+
         menuPanel.add(btnVend);
         menuPanel.add(btnTab);
         menuPanel.add(btnRegn);
@@ -66,16 +71,29 @@ public class Window extends JFrame implements ActionListener {
         btnTab.setPreferredSize(buttonSize);
         btnRegn.setPreferredSize(buttonSize);
         btnMonkey.setPreferredSize(buttonSize);
+        btnLeaderBoard.setPreferredSize((new Dimension(600,60)));
+
+
+        btnVend.setBackground(new Color(186, 85, 211));
+        btnTab.setBackground(new Color(5, 203, 252));
+        btnRegn.setBackground(new Color(200, 200, 200));
+        btnMonkey.setBackground(new Color(50, 205, 50));
+        btnLeaderBoard.setBackground(new Color(255,215,0));
+
+
+        for (JButton b : new JButton[]{btnVend, btnTab, btnRegn, btnMonkey, btnLeaderBoard}) {
+            b.setOpaque(true);
+            b.setBorderPainted(false);
+            b.setFocusPainted(false);
+            b.setContentAreaFilled(true);
+            b.setForeground(Color.BLACK);
+        }
 
         JPanel nede = new JPanel(new FlowLayout(FlowLayout.CENTER));
         nede.setBorder((BorderFactory.createEmptyBorder(0,0,100,0)));
-
-        JButton btnLeaderBoard = new JButton ("Leaderboard");
-        btnLeaderBoard.setPreferredSize((new Dimension(600,60)));
-        btnLeaderBoard.setFont((new  Font("Arial",Font.BOLD,24)));
-        btnLeaderBoard.addActionListener(this);
-
         nede.add(btnLeaderBoard);
+
+
         menuContainer.add(nede,BorderLayout.PAGE_END);
         this.revalidate();
         this.repaint();
@@ -115,7 +133,6 @@ public class Window extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String buttonText = e.getActionCommand();
-        System.out.println("buttonText: "+buttonText);
         if (Objects.equals(buttonText, "Vendespil")) {
             try {
                 Socket socket = new Socket(ip, port);
@@ -193,7 +210,11 @@ public class Window extends JFrame implements ActionListener {
                 System.out.println("Could not connect to server: " + Arrays.toString(ex.getStackTrace()));
             }
         } else if (e.getSource() == submitButton) {
-            username = usernameField.getText();
+            String data = usernameField.getText();
+            if (data.isEmpty()){
+                return;
+            }
+            username = data;
             this.remove(usernameContainer);
             this.revalidate();
             this.repaint();

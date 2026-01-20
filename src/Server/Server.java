@@ -54,8 +54,5 @@ public class Server {
         } catch (Exception e) {
             System.out.println("Error when creating the server: "+ e.getMessage());
         }
-
-
-
     }
 }
