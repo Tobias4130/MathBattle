@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -14,6 +15,10 @@ public class Window extends JFrame implements ActionListener {
     String ip = "localhost";
     int port = 6000;
     JPanel menuContainer;
+    JPanel usernameContainer;
+    JButton submitButton;
+    JTextField usernameField;
+    String username;
 
     public Window() {
         this.setTitle("MathBattle");
@@ -21,7 +26,7 @@ public class Window extends JFrame implements ActionListener {
         this.setSize(1200,800);
         this.setResizable(false);
 
-        MainMenuSetup();
+        createGetUsernameUI();
 
         this.setVisible(true);
     }
@@ -38,24 +43,29 @@ public class Window extends JFrame implements ActionListener {
         menuPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10,20));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(100,0,0,0));
 
-        Dimension buttonSize = new Dimension(300, 300);
+        Dimension buttonSize = new Dimension(200, 200);
         Font gameButtonFont = new Font("Arial", Font.BOLD, 20);
         JButton btnVend = new JButton("Vendespil");
         JButton btnTab = new JButton("Tabeltræning");
-        JButton btnFald = new JButton("Faldende Regnestykker");
+        JButton btnRegn = new JButton("Regnestykker");
+        JButton btnMonkey =  new JButton("Monkey Race");
         btnVend.addActionListener(this);
         btnTab.addActionListener(this);
-        btnFald.addActionListener(this);
+        btnRegn.addActionListener(this);
+        btnMonkey.addActionListener(this);
         btnVend.setFont(gameButtonFont);
         btnTab.setFont(gameButtonFont);
-        btnFald.setFont(gameButtonFont);
+        btnRegn.setFont(gameButtonFont);
+        btnMonkey.setFont(gameButtonFont);
         menuPanel.add(btnVend);
         menuPanel.add(btnTab);
-        menuPanel.add(btnFald);
+        menuPanel.add(btnRegn);
+        menuPanel.add(btnMonkey);
 
         btnVend.setPreferredSize(buttonSize);
         btnTab.setPreferredSize(buttonSize);
-        btnFald.setPreferredSize(buttonSize);
+        btnRegn.setPreferredSize(buttonSize);
+        btnMonkey.setPreferredSize(buttonSize);
 
         JPanel nede = new JPanel(new FlowLayout(FlowLayout.CENTER));
         nede.setBorder((BorderFactory.createEmptyBorder(0,0,100,0)));
@@ -63,15 +73,49 @@ public class Window extends JFrame implements ActionListener {
         JButton btnLeaderBoard = new JButton ("Leaderboard");
         btnLeaderBoard.setPreferredSize((new Dimension(600,60)));
         btnLeaderBoard.setFont((new  Font("Arial",Font.BOLD,24)));
+        btnLeaderBoard.addActionListener(this);
 
         nede.add(btnLeaderBoard);
         menuContainer.add(nede,BorderLayout.PAGE_END);
+        this.revalidate();
+        this.repaint();
     }
 
+    private void createGetUsernameUI() {
+        usernameField = new JTextField();
+        usernameField.setMaximumSize(new Dimension(400, 40));
+        usernameField.setFont(new Font("Arial", Font.PLAIN, 18));
+        usernameField.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        submitButton = new JButton("Choose username");
+        submitButton.addActionListener(this);
+        submitButton.setFont(new Font("Arial", Font.BOLD, 16));
+        submitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        usernameContainer = new JPanel();
+        usernameContainer.setLayout(new BoxLayout(usernameContainer, BoxLayout.PAGE_AXIS));
+        usernameContainer.setBorder(BorderFactory.createEmptyBorder(200, 200, 200, 200));
+
+        JLabel enterYourUsernameLabel = new JLabel("Enter your username");
+        enterYourUsernameLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        enterYourUsernameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        usernameContainer.add(enterYourUsernameLabel);
+        usernameContainer.add(Box.createRigidArea(new Dimension(0, 20)));
+        usernameContainer.add(usernameField);
+        usernameContainer.add(Box.createRigidArea(new Dimension(0, 10)));
+        usernameContainer.add(submitButton);
+        usernameContainer.add(Box.createVerticalGlue());
+
+        this.getContentPane().add(usernameContainer, BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         String buttonText = e.getActionCommand();
+        System.out.println("buttonText: "+buttonText);
         if (Objects.equals(buttonText, "Vendespil")) {
             try {
                 Socket socket = new Socket(ip, port);
@@ -87,7 +131,7 @@ public class Window extends JFrame implements ActionListener {
             } catch (Exception ex) {
                 System.out.println("Could not connect to server: " + ex.getMessage());
             }
-        } else if (Objects.equals(e.getActionCommand(), "Tabeltræning")) {
+        } else if (Objects.equals(buttonText, "Tabeltræning")) {
             try {
                 Socket socket = new Socket(ip, port);
                 Scanner sockReceiver = new Scanner(socket.getInputStream());
@@ -102,23 +146,58 @@ public class Window extends JFrame implements ActionListener {
             } catch (Exception ex) {
                 System.out.println("Could not connect to server: " + ex.getMessage());
             }
-        } else if (Objects.equals(e.getActionCommand(), "Faldende Regnestykker")) {
+        } else if (Objects.equals(buttonText, "Regnestykker")) {
             try {
                 Socket socket = new Socket(ip, port);
                 Scanner sockReceiver = new Scanner(socket.getInputStream());
                 PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true);
 
-                sockSender.println("Faldende Regnestykker");
-                FaldendeRegnestykker game = new FaldendeRegnestykker(this, buttonText, socket, sockReceiver, sockSender);
+                sockSender.println("Regnestykker");
+                simpleRegnestyk game = new simpleRegnestyk(this, buttonText, socket, sockReceiver, sockSender);
                 getContentPane().remove(menuContainer);
                 this.add(game);
                 this.revalidate();
                 this.repaint();
             } catch (Exception ex) {
-                System.out.println("Could not connect to server: " + ex.getMessage());
+                System.out.println("Could not connect to server: " + Arrays.toString(ex.getStackTrace()));
             }
+        } else if (Objects.equals(buttonText, "Monkey Race")) {
+            try {
+                Socket socket = new Socket(ip, port);
+                Scanner sockReceiver = new Scanner(socket.getInputStream());
+                PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true);
+
+                sockSender.println("Monkey Race");
+                MonkeyRace game = new MonkeyRace(this, buttonText, socket, sockReceiver, sockSender);
+                getContentPane().remove(menuContainer);
+                this.add(game);
+                this.revalidate();
+                this.repaint();
+            } catch (Exception ex) {
+                System.out.println("Could not connect to server: " + Arrays.toString(ex.getStackTrace()));
+            }
+
+        } else if (Objects.equals(buttonText, "Leaderboard")) {
+            try {
+                Socket socket = new Socket(ip, port);
+                Scanner sockReceiver = new Scanner(socket.getInputStream());
+                PrintWriter sockSender = new PrintWriter(socket.getOutputStream(), true);
+
+                sockSender.println("Leaderboard");
+                Leaderboard leaderboard = new Leaderboard(this, buttonText, socket, sockReceiver, sockSender);
+                getContentPane().remove(menuContainer);
+                this.add(leaderboard);
+                this.revalidate();
+                this.repaint();
+            } catch (Exception ex) {
+                System.out.println("Could not connect to server: " + Arrays.toString(ex.getStackTrace()));
+            }
+        } else if (e.getSource() == submitButton) {
+            username = usernameField.getText();
+            this.remove(usernameContainer);
+            this.revalidate();
+            this.repaint();
+            MainMenuSetup();
         }
     }
 }
-
-

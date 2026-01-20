@@ -27,8 +27,21 @@ public class Server {
                                 new Thread(game).start();
                             }
                         }
-                        case "Faldende Regnestykker" -> {
-                            FaldendeRegnestykker game = new FaldendeRegnestykker(connection);
+                        case "Regnestykker" -> {
+                            simpleRegnestyk game = new simpleRegnestyk(connection);
+                            if (game.connectionSuccessful) {
+                                new Thread(game).start();
+                            }
+                        }
+                        case "Monkey Race" -> {
+                            MonkeyRace game = new MonkeyRace(connection);
+                            if (game.connectionSuccessful) {
+                                new Thread(game).start();
+                            }
+                        }
+                        case "Leaderboard" -> {
+                            System.out.println("Leaderboard");
+                            Leaderboard game = new Leaderboard(connection);
                             if (game.connectionSuccessful) {
                                 new Thread(game).start();
                             }
@@ -41,5 +54,8 @@ public class Server {
         } catch (Exception e) {
             System.out.println("Error when creating the server: "+ e.getMessage());
         }
+
+
+
     }
 }
