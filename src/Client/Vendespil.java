@@ -124,6 +124,7 @@ public class Vendespil extends Connection {
             }
         } else if (line.startsWith("Game has ended")){
             uiTimer.stop();
+            JOptionPane.showMessageDialog(null, "Tillykke du er færdig!\n Din tid:" + elapsedSeconds + "sekunder");
             sender.println(username);
         }
     }
