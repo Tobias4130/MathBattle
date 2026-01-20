@@ -69,13 +69,7 @@ public class Leaderboard extends Connection{
 
         if (selectedFile.exists()) {
             try (Scanner reader = new Scanner(selectedFile)) {
-                while (reader.hasNextLine()) {
-                    String line = reader.nextLine();
-                    String[] lineArray = line.split(",");
-                    String tempUser = lineArray[0];
-                    String tempScore = lineArray[1];
-                    map.put(tempUser, Double.valueOf(tempScore));
-                }
+                map = loadDataToMap(reader);
             } catch (FileNotFoundException ex) {
                 System.out.println("Now we cry"+ex.getMessage());
             }
@@ -203,3 +197,4 @@ public class Leaderboard extends Connection{
         }
     }
 }
+
