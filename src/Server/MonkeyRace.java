@@ -12,7 +12,6 @@ public class MonkeyRace extends Connection {
 
     public MonkeyRace(Socket gameSocket) {
         super(gameSocket);
-
     }
     //Modtager beskeder fra klient og reagerer
     @Override
@@ -44,14 +43,14 @@ public class MonkeyRace extends Connection {
         //sender til klient
         writer.println("Q:"+a+op+b);
     }
-    //tjekker om spillerens svar er korrekt
+    // tjekker om spillerens svar er korrekt
     private void checkAnswer(String answer) {
         try {
             int answerInt = Integer.parseInt(answer);
             //Korrekt svar
             if (answerInt == expectedAnswer){
                 leftUntilWin--;
-                if (leftUntilWin == 0){
+                if (leftUntilWin <= 0){
                     //Spilleren når i mål
                     writer.println("W");
                     String username = reader.nextLine();

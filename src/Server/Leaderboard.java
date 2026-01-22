@@ -81,7 +81,7 @@ public class Leaderboard extends Connection{
 
         try (PrintWriter writer = new PrintWriter(selectedFile)) {
             for (String key : map.keySet()) {
-                writer.println(key + "," + map.get(key));
+                writer.println(key + "," + Math.round(map.get(key)*100)/100);
             }
             writer.flush();
         } catch (FileNotFoundException ex) {
