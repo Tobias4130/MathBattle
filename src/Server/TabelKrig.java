@@ -28,8 +28,6 @@ public class TabelKrig extends Connection {
                 int selectedTable = Integer.parseInt(splitLine[1]);
                 tableList = buildTableList(selectedTable);
 
-                numberCorrect = 0;
-                mistakes = 0;
                 startTime = System.nanoTime();
             }
             //Gæt forventes fra klienten

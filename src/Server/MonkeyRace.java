@@ -7,7 +7,7 @@ import java.util.Random;
 public class MonkeyRace extends Connection {
     private final Random random = new Random(); //tilfældige tal generares
     private int expectedAnswer; //Svaret vi forventer (rigtige)
-    private int leftUntilWin = 8;//hvor mange rigtige svar spilleren mangler
+    private int leftUntilWin = 8; //hvor mange rigtige svar spilleren mangler
     private double startTime; // tidspunktet hvor spillet startede.
 
     public MonkeyRace(Socket gameSocket) {
@@ -19,6 +19,7 @@ public class MonkeyRace extends Connection {
         String line;
         while(reader.hasNextLine()){
             line = reader.nextLine();
+            System.out.println("Received: " + line);
             //Starter spil
             if (line.equals("Start")) {
                 nextQuestion();
@@ -28,6 +29,7 @@ public class MonkeyRace extends Connection {
             }
         }
     }
+
     //Generer nyt regnestykker og sender til klient
     private void nextQuestion() {
         int a = random.nextInt(91) + 10;
@@ -60,7 +62,7 @@ public class MonkeyRace extends Connection {
                     new Leaderboard().addResult("MonkeyRace", username, roundedEndTime);
 
                 } else {
-                    //spiller rykker videre til næste palmetræ
+                    //Spiller rykker videre til næste palmetræ
                     writer.println("C");
                     nextQuestion();
                 }

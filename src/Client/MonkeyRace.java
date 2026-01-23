@@ -8,13 +8,10 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicArrowButton;
-import java.util.Random;
 
 //Skal løse regnestykker og aben hopper en palme frem og aben skal nå bananerne
 public class MonkeyRace extends Connection implements KeyListener {
 
-    private boolean animating = false;
     private Timer hopTimer;
 
     private JPanel top;
@@ -257,14 +254,13 @@ public class MonkeyRace extends Connection implements KeyListener {
                 abeLabel.setLocation(targetX, baseY);
                 trackPanel.revalidate();
                 trackPanel.repaint();
-                animating = false;
             }
         });
         hopTimer.start();
     }
     //Håndtere beskeder fra serveren
     private void handleServerMessages(String line) {
-        System.out.println(line);
+        System.out.println("Received: " + line);
         if (line.length() > 1) {
             String[] lineSplit = line.split(":");
             String action = lineSplit[0];

@@ -23,8 +23,6 @@ public class Vendespil extends Connection {
     public  Vendespil(Socket gameSocket){
         super(gameSocket);
         createHashMapAndBoard();
-        System.out.println(Arrays.deepToString(board));
-        System.out.println(calculationsMap);
     }
 
     //Opretter spillebræt ud fra hashmap, hvor der genereres 8 regnestykker og hver regnestykke placeres tilfældigt.
@@ -98,7 +96,6 @@ public class Vendespil extends Connection {
                             double roundedEndTime = Math.round(endTime * 100.0) / 100.0;
                             writer.println("Game has ended:" + endTime + " seconds");
                             String username = reader.nextLine();
-                            System.out.println("Got username: " + username);
                             double score = calculateScore(roundedEndTime,movesMade);
                             new Leaderboard().addResult("Vendespil",username,score);
                             break;
@@ -111,7 +108,6 @@ public class Vendespil extends Connection {
                             double roundedEndTime = Math.round(endTime * 100.0) / 100.0;
                             writer.println("Game has ended:" + roundedEndTime);
                             String username = reader.nextLine();
-                            System.out.println("Got username: " + username);
                             double score = calculateScore(roundedEndTime,movesMade);
                             new Leaderboard().addResult("Vendespil",username,score);
                             break;

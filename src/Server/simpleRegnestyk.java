@@ -74,7 +74,7 @@ public class simpleRegnestyk extends Connection {
             }
         }
     }
-    //næste regnestykke sendes
+    //Næste regnestykke sendes
     private void sendQuestion() {
         int questionNumber = index + 1;
         Problem p = problems.get(index);
