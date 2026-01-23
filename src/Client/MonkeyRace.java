@@ -70,20 +70,22 @@ public class MonkeyRace extends Connection implements KeyListener {
         trackPanel = new JPanel(null);
         trackPanel.setOpaque(false);
         trackPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
         //Abe billede
         ImageIcon icon = new ImageIcon("src/Client/Images/monkey.png");
         Image img = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
         abeLabel = new JLabel(new ImageIcon(img));
         abeLabel.setSize(80, 80);
+
         //Banan billede (præmie)
         ImageIcon iconFinish = new ImageIcon(("src/Client/Images/banana.png"));
         Image imgFinish = iconFinish.getImage().getScaledInstance(80,80, Image.SCALE_SMOOTH);
         finishLabel = new JLabel(new ImageIcon(imgFinish));
         finishLabel.setSize(80,80);
 
-
         trackPanel.add(abeLabel);
         trackPanel.add(finishLabel);
+
         //Palmetræ
         ImageIcon palmIcon = new ImageIcon("src/Client/Images/palm-tree.png");
         Image palmImg = palmIcon.getImage().getScaledInstance(120, 160, Image.SCALE_SMOOTH);

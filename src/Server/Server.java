@@ -9,6 +9,7 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
             while (true) {
+                System.out.println("Server has started and is ready for connection");
                 Socket connection = serverSocket.accept();
 
                 try  {
